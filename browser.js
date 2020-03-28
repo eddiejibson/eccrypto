@@ -45,7 +45,11 @@ function equalConstTime(b1, b2) {
 /* This must check if we're in the browser or
 not, since the functions are different and does
 not convert using browserify */
-function randomBytes(size) {
+function randomBytes(size, secret = null) {
+  if (secret && secret.length < 32) secret = false;
+  if (secret) {
+    return Buffer.from(secret.substr(0, 32), "utf8");
+  }
   var arr = new Uint8Array(size);
   if (typeof browserCrypto.getRandomValues === 'undefined') {
     return Buffer.from(nodeCrypto.randomBytes(size));
@@ -53,6 +57,7 @@ function randomBytes(size) {
     browserCrypto.getRandomValues(arr);
   }
   return Buffer.from(arr);
+  
 }
 
 function sha512(msg) {
@@ -65,6 +70,7 @@ function sha512(msg) {
 
 function getAes(op) {
   return function(iv, key, data) {
+    iv = iv.toString('hex').slice(0, 16);
     return new Promise(function(resolve) {
       if (subtle) {
         var importAlgorithm = {name: "AES-CBC"};
@@ -118,10 +124,10 @@ function hmacSha256Verify(key, msg, sig) {
   * @return {Buffer} A 32-byte private key.
   * @function
   */
-exports.generatePrivate = function () {
-  var privateKey = randomBytes(32);
+exports.generatePrivate = function (secret = null) {
+  var privateKey = randomBytes(32, secret);
   while (!isValidPrivateKey(privateKey)) {
-    privateKey = randomBytes(32);
+    privateKey = randomBytes(32, secret);
   }
   return privateKey;
 };
@@ -220,7 +226,7 @@ exports.encrypt = function(publicKeyTo, msg, opts) {
   }).then(function(Px) {
     return sha512(Px);
   }).then(function(hash) {
-    iv = opts.iv || randomBytes(16);
+    iv = randomBytes(16);
     var encryptionKey = hash.slice(0, 32);
     macKey = hash.slice(32);
     return aesCbcEncrypt(iv, encryptionKey, msg);
