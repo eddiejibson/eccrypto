@@ -70,7 +70,6 @@ function sha512(msg) {
 
 function getAes(op) {
   return function(iv, key, data) {
-    iv = iv.toString('hex').slice(0, 16);
     return new Promise(function(resolve) {
       if (subtle) {
         var importAlgorithm = {name: "AES-CBC"};
@@ -84,13 +83,20 @@ function getAes(op) {
       } else {
         if (op === 'encrypt') {
           var cipher = nodeCrypto.createCipheriv('aes-256-cbc', key, iv);
-          cipher.update(data);
-          resolve(cipher.final());
+     
+          resolve(Buffer.concat([
+            cipher.update(data, 'utf-8'),
+            cipher.final()
+          ]));
         }
         else if (op === 'decrypt') {
           var decipher = nodeCrypto.createDecipheriv('aes-256-cbc', key, iv);
-          decipher.update(data);
-          resolve(decipher.final());
+        
+          resolve(Buffer.concat([
+            decipher.update(data, 'utf-8'),
+            decipher.final()
+          ]));
+       
         }
       }
     });
@@ -132,6 +138,20 @@ exports.generatePrivate = function (secret = null) {
   return privateKey;
 };
 
+exports.strui8 = function (str) {
+  str = str.normalize("NFKC");
+  const strlen = str.length;
+  let bytes = new Uint8Array(strlen);
+  for (var i = 0; i < strlen; i++) {
+    bytes[i] = str.charCodeAt(i);
+  }
+  return bytes;
+}
+
+exports.ui8str = function (b) {
+  return String.fromCharCode.apply(null, b);
+}
+
 var getPublic = exports.getPublic = function(privateKey) {
   // This function has sync API so we throw an error immediately.
   assert(privateKey.length === 32, "Bad private key");
@@ -159,27 +179,14 @@ var getPublicCompressed = exports.getPublicCompressed = function(privateKey) { /
 // <http://caniuse.com/#feat=cryptography>).
 exports.sign = function(privateKey, msg) {
   return new Promise(function(resolve) {
-    assert(privateKey.length === 32, "Bad private key");
-    assert(isValidPrivateKey(privateKey), "Bad private key");
-    assert(msg.length > 0, "Message should not be empty");
-    assert(msg.length <= 32, "Message is too long");
-    resolve(Buffer.from(ec.sign(msg, privateKey, {canonical: true}).toDER()));
+
+    resolve(Buffer.from(ec.sign(msg, privateKey).toDER()));
   });
 };
 
 exports.verify = function(publicKey, msg, sig) {
   return new Promise(function(resolve, reject) {
-    assert(publicKey.length === 65 || publicKey.length === 33, "Bad public key");
-    if (publicKey.length === 65)
-    {
-      assert(publicKey[0] === 4, "Bad public key");
-    }
-    if (publicKey.length === 33)
-    {
-      assert(publicKey[0] === 2 || publicKey[0] === 3, "Bad public key");
-    }
-    assert(msg.length > 0, "Message should not be empty");
-    assert(msg.length <= 32, "Message is too long");
+    
     if (ec.verify(msg, sig, publicKey)) {
       resolve(null);
     } else {
