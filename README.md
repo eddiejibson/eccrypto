@@ -1,22 +1,22 @@
-# eccrypto [![Build Status](https://travis-ci.org/bitchan/eccrypto.svg?branch=master)](https://travis-ci.org/bitchan/eccrypto)
+# lcrypto [![Build Status](https://travis-ci.org/bitchan/eccrypto.svg?branch=master)](https://travis-ci.org/bitchan/eccrypto)
 
-[![NPM](https://nodei.co/npm/eccrypto.png)](https://www.npmjs.com/package/eccrypto)
+[![NPM](https://nodei.co/npm/lcrypto.png)](https://www.npmjs.com/package/lcrypto)
 
-JavaScript Elliptic curve cryptography library for both browserify and node.
+An even better JavaScript Elliptic curve cryptography library for both browserify and node (my updates are only for the browser, sorry). This is a fork from [Bitchan's eccrypto](https://github.com/bitchan/eccrypto) as it didn't have some things I wanted (Create a private key from a passphrase, sign messages longer than 32 characters and encryption was broken for anything over 15 characters which I had to change for a project I'm working on).
 
 ## Motivation
 
-There is currently no any isomorphic ECC library which provides ECDSA, ECDH and ECIES for both Node.js and Browser and uses the fastest implementation available (e.g. [secp256k1-node](https://github.com/wanderer/secp256k1-node) is much faster than other libraries but can be used only on Node.js). So `eccrypto` is an attempt to create one.
+There is currently no any isomorphic ECC library which provides ECDSA, ECDH and ECIES for both Node.js and Browser and uses the fastest implementation available (e.g. [secp256k1-node](https://github.com/wanderer/secp256k1-node) is much faster than other libraries but can be used only on Node.js). So `lcrypto` is an attempt to create one.
 
 ## Implementation details
 
-With the help of browserify `eccrypto` provides different implementations for Browser and Node.js with the same API. Because WebCryptoAPI defines asynchronous promise-driven API, implementation for Node needs to use promises too.
+With the help of browserify `lcrypto` provides different implementations for Browser and Node.js with the same API. Because WebCryptoAPI defines asynchronous promise-driven API, implementation for Node needs to use promises too.
 
-* Use Node.js crypto module/library bindings where possible
-* Use WebCryptoAPI where possible
-* Promise-driven API
-* Only secp256k1 curve, only SHA-512 (KDF), HMAC-SHA-256 (HMAC) and AES-256-CBC for ECIES
-* Compressed key support
+- Use Node.js crypto module/library bindings where possible
+- Use WebCryptoAPI where possible
+- Promise-driven API
+- Only secp256k1 curve, only SHA-512 (KDF), HMAC-SHA-256 (HMAC) and AES-256-CBC for ECIES
+- Compressed key support
 
 ### Native crypto API limitations
 
@@ -32,7 +32,7 @@ So we use [seck256k1](https://www.npmjs.com/package/secp256k1) library in Node f
 
 ## Possible future goals
 
-* Support other curves/KDF/MAC/symmetric encryption schemes
+- Support other curves/KDF/MAC/symmetric encryption schemes
 
 ## Usage
 
@@ -43,21 +43,31 @@ var crypto = require("crypto");
 var eccrypto = require("eccrypto");
 
 // A new random 32-byte private key.
-var privateKey = eccrypto.generatePrivate();
+//The optional first param here is the passphrase.
+//It must be 32 characters long, I suggest using scrypt or bcrypt for hashing any password to this length
+var privateKey = eccrypto.generatePrivate(
+  "fdgfdsfdgufdugsbifdgsbuubsdfgubffdgfdsfdgufdugsbifdgsbuubsdfgubf"
+);
 // Corresponding uncompressed (65-byte) public key.
 var publicKey = eccrypto.getPublic(privateKey);
 
 var str = "message to sign";
 // Always hash you message to sign!
-var msg = crypto.createHash("sha256").update(str).digest();
+var msg = crypto
+  .createHash("sha256")
+  .update(str)
+  .digest();
 
 eccrypto.sign(privateKey, msg).then(function(sig) {
   console.log("Signature in DER format:", sig);
-  eccrypto.verify(publicKey, msg, sig).then(function() {
-    console.log("Signature is OK");
-  }).catch(function() {
-    console.log("Signature is BAD");
-  });
+  eccrypto
+    .verify(publicKey, msg, sig)
+    .then(function() {
+      console.log("Signature is OK");
+    })
+    .catch(function() {
+      console.log("Signature is BAD");
+    });
 });
 ```
 
