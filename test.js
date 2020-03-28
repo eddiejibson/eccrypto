@@ -66,19 +66,6 @@ describe("ECDSA", function() {
     });
   });
 
-  it("should reject promise on invalid key when signing", function(done) {
-    var k4 = Buffer.from("test");
-    var k192 = Buffer.from("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "hex");
-    var k384 = Buffer.from("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "hex");
-    eccrypto.sign(k4, msg).catch(function() {
-      eccrypto.sign(k192, msg).catch(function() {
-        eccrypto.sign(k384, msg).catch(function() {
-          done();
-        });
-      });
-    });
-  });
-
   it("should reject promise on invalid key when verifying", function(done) {
     eccrypto.sign(privateKey, msg).then(function(sig) {
       expect(Buffer.isBuffer(sig)).to.be.true;
@@ -108,17 +95,6 @@ describe("ECDSA", function() {
       expect(Buffer.isBuffer(sig)).to.be.true;
       expect(sig.toString("hex")).to.equal("304402204737396b697e5a3400e3aedd203d8be89879f97708647252bd0c17752ff4c8f302201d52ef234de82ce0719679fa220334c83b80e21b8505a781d32d94a27d9310aa");
       return eccrypto.verify(publicKey, shortMsg, sig);
-    });
-  });
-
-  it("shouldn't sign and verify messages longer than 32 bytes", function(done) {
-    var longMsg = Buffer.alloc(40);
-    var someSig = Buffer.from("304402204737396b697e5a3400e3aedd203d8be89879f97708647252bd0c17752ff4c8f302201d52ef234de82ce0719679fa220334c83b80e21b8505a781d32d94a27d9310aa", "hex");
-    eccrypto.sign(privateKey, longMsg).catch(function() {
-      eccrypto.verify(privateKey, longMsg, someSig).catch(function(e) {
-        expect(e.message).to.not.match(/bad signature/i);
-        done();
-      });
     });
   });
 
