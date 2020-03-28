@@ -1,4 +1,4 @@
-# lcrypto [![Build Status](https://travis-ci.org/bitchan/eccrypto.svg?branch=master)](https://travis-ci.org/bitchan/eccrypto)
+# lcrypto [![Build Status](https://travis-ci.org/eddiejibson/lcrypto.svg?branch=master)](https://travis-ci.org/eddiejibson/lcrypto)
 
 [![NPM](https://nodei.co/npm/lcrypto.png)](https://www.npmjs.com/package/lcrypto)
 
