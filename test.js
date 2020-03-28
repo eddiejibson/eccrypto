@@ -2,11 +2,17 @@ var expect = require("chai").expect;
 var createHash = require("crypto").createHash;
 var bufferEqual = require("buffer-equal");
 var eccrypto = require("./");
-var assert = require('assert'); // deleteme
+var assert = require("assert"); // deleteme
 
-var msg = createHash("sha256").update("test").digest();
-var otherMsg = createHash("sha256").update("test2").digest();
-var shortMsg = createHash("sha1").update("test").digest();
+var msg = createHash("sha256")
+  .update("test")
+  .digest();
+var otherMsg = createHash("sha256")
+  .update("test2")
+  .digest();
+var shortMsg = createHash("sha1")
+  .update("test")
+  .digest();
 
 var privateKey = Buffer.alloc(32);
 privateKey.fill(1);
@@ -26,16 +32,22 @@ var publicKeyBCompressed = eccrypto.getPublicCompressed(privateKeyB);
 describe("Key conversion", function() {
   it("should allow to convert private key to public", function() {
     expect(Buffer.isBuffer(publicKey)).to.be.true;
-    expect(publicKey.toString("hex")).to.equal("041b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f70beaf8f588b541507fed6a642c5ab42dfdf8120a7f639de5122d47a69a8e8d1");
+    expect(publicKey.toString("hex")).to.equal(
+      "041b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f70beaf8f588b541507fed6a642c5ab42dfdf8120a7f639de5122d47a69a8e8d1"
+    );
   });
 
   it("shouwld allow to convert private key to compressed public", function() {
-	expect(Buffer.isBuffer(publicKeyCompressed)).to.be.true;
-	expect(publicKeyCompressed.toString("hex")).to.equal("031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f");
+    expect(Buffer.isBuffer(publicKeyCompressed)).to.be.true;
+    expect(publicKeyCompressed.toString("hex")).to.equal(
+      "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
+    );
   });
 
   it("should throw on invalid private key", function() {
-    expect(eccrypto.getPublic.bind(null, Buffer.from("00", "hex"))).to.throw(Error);
+    expect(eccrypto.getPublic.bind(null, Buffer.from("00", "hex"))).to.throw(
+      Error
+    );
     expect(eccrypto.getPublic.bind(null, Buffer.from("test"))).to.throw(Error);
   });
 });
@@ -44,7 +56,9 @@ describe("ECDSA", function() {
   it("should allow to sign and verify message", function() {
     return eccrypto.sign(privateKey, msg).then(function(sig) {
       expect(Buffer.isBuffer(sig)).to.be.true;
-      expect(sig.toString("hex")).to.equal("3044022078c15897a34de6566a0d396fdef660698c59fef56d34ee36bef14ad89ee0f6f8022016e02e8b7285d93feafafbe745702f142973a77d5c2fa6293596357e17b3b47c");
+      expect(sig.toString("hex")).to.equal(
+        "3044022078c15897a34de6566a0d396fdef660698c59fef56d34ee36bef14ad89ee0f6f8022016e02e8b7285d93feafafbe745702f142973a77d5c2fa6293596357e17b3b47c"
+      );
       return eccrypto.verify(publicKey, msg, sig);
     });
   });
@@ -52,7 +66,9 @@ describe("ECDSA", function() {
   it("should allow to sign and verify message using a compressed public key", function() {
     return eccrypto.sign(privateKey, msg).then(function(sig) {
       expect(Buffer.isBuffer(sig)).to.be.true;
-      expect(sig.toString("hex")).to.equal("3044022078c15897a34de6566a0d396fdef660698c59fef56d34ee36bef14ad89ee0f6f8022016e02e8b7285d93feafafbe745702f142973a77d5c2fa6293596357e17b3b47c");
+      expect(sig.toString("hex")).to.equal(
+        "3044022078c15897a34de6566a0d396fdef660698c59fef56d34ee36bef14ad89ee0f6f8022016e02e8b7285d93feafafbe745702f142973a77d5c2fa6293596357e17b3b47c"
+      );
       return eccrypto.verify(publicKeyCompressed, msg, sig);
     });
   });
@@ -93,19 +109,7 @@ describe("ECDSA", function() {
   it("should allow to sign and verify messages less than 32 bytes", function() {
     return eccrypto.sign(privateKey, shortMsg).then(function(sig) {
       expect(Buffer.isBuffer(sig)).to.be.true;
-      expect(sig.toString("hex")).to.equal("304402204737396b697e5a3400e3aedd203d8be89879f97708647252bd0c17752ff4c8f302201d52ef234de82ce0719679fa220334c83b80e21b8505a781d32d94a27d9310aa");
       return eccrypto.verify(publicKey, shortMsg, sig);
-    });
-  });
-
-  it("shouldn't sign and verify empty messages", function(done) {
-    var emptyMsg = Buffer.alloc(0);
-    var someSig = Buffer.from("304402204737396b697e5a3400e3aedd203d8be89879f97708647252bd0c17752ff4c8f302201d52ef234de82ce0719679fa220334c83b80e21b8505a781d32d94a27d9310aa", "hex");
-    eccrypto.sign(privateKey, emptyMsg).catch(function() {
-      eccrypto.verify(publicKey, emptyMsg, someSig).catch(function(e) {
-        expect(e.message).to.not.match(/bad signature/i);
-        done();
-      });
     });
   });
 });
@@ -115,7 +119,9 @@ describe("ECDH", function() {
     return eccrypto.derive(privateKeyA, publicKeyB).then(function(Px) {
       expect(Buffer.isBuffer(Px)).to.be.true;
       expect(Px.length).to.equal(32);
-      expect(Px.toString("hex")).to.equal("aca78f27d5f23b2e7254a0bb8df128e7c0f922d47ccac72814501e07b7291886");
+      expect(Px.toString("hex")).to.equal(
+        "aca78f27d5f23b2e7254a0bb8df128e7c0f922d47ccac72814501e07b7291886"
+      );
       return eccrypto.derive(privateKeyB, publicKeyA).then(function(Px2) {
         expect(Buffer.isBuffer(Px2)).to.be.true;
         expect(Px2.length).to.equal(32);
@@ -125,16 +131,20 @@ describe("ECDH", function() {
   });
 
   it("should derive shared secret from  privkey A and compressed pubkey B", function() {
-    return eccrypto.derive(privateKeyA, publicKeyBCompressed).then(function(Px) {
-      expect(Buffer.isBuffer(Px)).to.be.true;
-      expect(Px.length).to.equal(32);
-      expect(Px.toString("hex")).to.equal("aca78f27d5f23b2e7254a0bb8df128e7c0f922d47ccac72814501e07b7291886");
-      return eccrypto.derive(privateKeyB, publicKeyA).then(function(Px2) {
-        expect(Buffer.isBuffer(Px2)).to.be.true;
-        expect(Px2.length).to.equal(32);
-        expect(bufferEqual(Px, Px2)).to.be.true;
+    return eccrypto
+      .derive(privateKeyA, publicKeyBCompressed)
+      .then(function(Px) {
+        expect(Buffer.isBuffer(Px)).to.be.true;
+        expect(Px.length).to.equal(32);
+        expect(Px.toString("hex")).to.equal(
+          "aca78f27d5f23b2e7254a0bb8df128e7c0f922d47ccac72814501e07b7291886"
+        );
+        return eccrypto.derive(privateKeyB, publicKeyA).then(function(Px2) {
+          expect(Buffer.isBuffer(Px2)).to.be.true;
+          expect(Px2.length).to.equal(32);
+          expect(bufferEqual(Px, Px2)).to.be.true;
+        });
       });
-    });
   });
 
   it("should reject promise on bad keys", function(done) {
@@ -164,63 +174,81 @@ describe("ECIES", function() {
   var iv = Buffer.alloc(16);
   iv.fill(5);
   var ciphertext = Buffer.from("bbf3f0e7486b552b0e2ba9c4ca8c4579", "hex");
-  var mac = Buffer.from("dbb14a9b53dbd6b763dba24dc99520f570cdf8095a8571db4bf501b535fda1ed", "hex");
-  var encOpts = {ephemPrivateKey: ephemPrivateKey, iv: iv};
-  var decOpts = {iv: iv, ephemPublicKey: ephemPublicKey, ciphertext: ciphertext, mac: mac};
+  var mac = Buffer.from(
+    "dbb14a9b53dbd6b763dba24dc99520f570cdf8095a8571db4bf501b535fda1ed",
+    "hex"
+  );
+  var encOpts = { ephemPrivateKey: ephemPrivateKey, iv: iv };
+  var decOpts = {
+    iv: iv,
+    ephemPublicKey: ephemPublicKey,
+    ciphertext: ciphertext,
+    mac: mac
+  };
 
   it("should encrypt", function() {
-    return eccrypto.encrypt(publicKeyB, Buffer.from("test"), encOpts)
-    .then(function(enc) {
-      expect(bufferEqual(enc.iv, iv)).to.be.true;
-      expect(bufferEqual(enc.ephemPublicKey, ephemPublicKey)).to.be.true;
-      expect(bufferEqual(enc.ciphertext, ciphertext)).to.be.true;
-      expect(bufferEqual(enc.mac, mac)).to.be.true;
-    });
+    return eccrypto
+      .encrypt(publicKeyB, Buffer.from("test"), encOpts)
+      .then(function(enc) {
+        expect(bufferEqual(enc.iv, iv)).to.be.true;
+        expect(bufferEqual(enc.ephemPublicKey, ephemPublicKey)).to.be.true;
+        expect(bufferEqual(enc.ciphertext, ciphertext)).to.be.true;
+        expect(bufferEqual(enc.mac, mac)).to.be.true;
+      });
   });
 
   it("should decrypt", function() {
-    return eccrypto.decrypt(privateKeyB, decOpts)
-    .then(function(msg) {
+    return eccrypto.decrypt(privateKeyB, decOpts).then(function(msg) {
       expect(msg.toString()).to.equal("test");
     });
   });
 
   it("should encrypt and decrypt", function() {
-    return eccrypto.encrypt(publicKeyA, Buffer.from("to a")).then(function(enc) {
-      return eccrypto.decrypt(privateKeyA, enc);
-    }).then(function(msg) {
-      expect(msg.toString()).to.equal("to a");
-    });
+    return eccrypto
+      .encrypt(publicKeyA, eccrypto.strui8("to a"))
+      .then(function(enc) {
+        return eccrypto.decrypt(privateKeyA, enc);
+      })
+      .then(function(msg) {
+        console.log("MSG", msg.toString());
+        expect(msg.toString()).to.equal("to a");
+      });
   });
 
   it("should encrypt with compressed public key", function() {
-    return eccrypto.encrypt(publicKeyBCompressed, Buffer.from("test"), encOpts)
-    .then(function(enc) {
-      expect(bufferEqual(enc.iv, iv)).to.be.true;
-      expect(bufferEqual(enc.ephemPublicKey, ephemPublicKey)).to.be.true;
-      expect(bufferEqual(enc.ciphertext, ciphertext)).to.be.true;
-      expect(bufferEqual(enc.mac, mac)).to.be.true;
-    });
+    return eccrypto
+      .encrypt(publicKeyBCompressed, Buffer.from("test"), encOpts)
+      .then(function(enc) {
+        expect(bufferEqual(enc.iv, iv)).to.be.true;
+        expect(bufferEqual(enc.ephemPublicKey, ephemPublicKey)).to.be.true;
+        expect(bufferEqual(enc.ciphertext, ciphertext)).to.be.true;
+        expect(bufferEqual(enc.mac, mac)).to.be.true;
+      });
   });
 
   it("should encrypt and decrypt with compressed public key", function() {
-    return eccrypto.encrypt(publicKeyACompressed, Buffer.from("to a")).then(function(enc) {
-      return eccrypto.decrypt(privateKeyA, enc);
-    }).then(function(msg) {
-      expect(msg.toString()).to.equal("to a");
-    });
+    return eccrypto
+      .encrypt(publicKeyACompressed, Buffer.from("to a"))
+      .then(function(enc) {
+        return eccrypto.decrypt(privateKeyA, enc);
+      })
+      .then(function(msg) {
+        expect(msg.toString()).to.equal("to a");
+      });
   });
 
-  it("should encrypt and decrypt with generated private and public key", function () {
+  it("should encrypt and decrypt with generated private and public key", function() {
     var privateKey = eccrypto.generatePrivate();
     var publicKey = eccrypto.getPublic(privateKey);
-    return eccrypto.encrypt(publicKey, Buffer.from("generated private key"))
-        .then(function(enc) { return eccrypto.decrypt(privateKey, enc); })
-        .then(function(msg) {
-          expect(msg.toString()).to.equal("generated private key");
-        });
+    return eccrypto
+      .encrypt(publicKey, Buffer.from("generated private key"))
+      .then(function(enc) {
+        return eccrypto.decrypt(privateKey, enc);
+      })
+      .then(function(msg) {
+        expect(msg.toString()).to.equal("generated private key");
+      });
   });
-
 
   it("should reject promise on bad private key when decrypting", function(done) {
     eccrypto.encrypt(publicKeyA, Buffer.from("test")).then(function(enc) {
